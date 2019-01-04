@@ -3,6 +3,7 @@
 #include <GL/glut.h>
 #include <iostream>
 using namespace std;
+#include "point3d.h"
 #include "key.h"
 #include "camera.h"
 
@@ -17,15 +18,28 @@ enum class Shape : int
     WIRE_OCTAHEDRON, // ośmiościan
     WIRE_TETRAHEDRON, // czworościan
     WIRE_ICOSAHEDRON, // dwudziestościan
+
+    SOLID_SPHERE , // kula
+    SOLID_CONE, // stożek
+    SOLID_CUBE, // sześcian
+    SOLID_TORUS, // torus
+    SOLID_DODECAHEDRON, // dwunastościan
+    SOLID_TEAPOT, // czajnik
+    SOLID_OCTAHEDRON, // ośmiościan
+    SOLID_TETRAHEDRON, // czworościan
+    SOLID_ICOSAHEDRON, // dwudziestościan
     LAST
 };
 
 enum class Settings : int
 {
-    FULL_WINDOW = 100, // aspekt obrazu - całe okno
+    FULL_WINDOW = 200, // aspekt obrazu - całe okno
     ASPECT_1_1, // aspekt obrazu 1:1
+    PERSPECTIVE, // rzutowanie perspektywistyczne
+    ORTHO ,// rzutowanie ortogontalne
     EXIT   // wyjście
  };
+
 
 //struct vec3
 //{
@@ -36,8 +50,10 @@ class Engine{
 public:
 
 void Init(int argc, char * argv[],const char* name, int wx, int wy, int width, int height);
+void errorHandling(const char * errorLocation);
 void display(Shape shape);
 void Reshape( int width, int height );
+void ReshapeOrtho( int width, int height );
 void skalowanie(int s, int w);
 void obroty(void);
 void set(void (* menuHandler)( int menu ));
@@ -47,8 +63,12 @@ void MouseButton( int button, int state, int x, int y );
 void SpecialKeys( int key, int x, int y );
 void Keyboard( unsigned char key, int x, int y );
 void glutDisplay();
-
-
+void ortho(int width, int height);
+void perspective(int width, int height);
+void cleanColor();
+void cleanDepth();
+void cleanAccum();
+void cleanStencil();
  float kat;
  Settings aspect = Settings::FULL_WINDOW;
 
@@ -85,9 +105,11 @@ int button_state ;
 // położenie kursora myszki
 
 int button_x, button_y;
-
+Key k;
+Camera c;
 
 private:
 void handleOption(const Settings currentOption);
-};
 
+int w,h;
+};

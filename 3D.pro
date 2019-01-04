@@ -20,9 +20,20 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += main.cpp \
     engine.cpp \
     camera.cpp \
-    key.cpp
+    key.cpp \
+    point3d.cpp \
+    primitives.cpp \
+    gloptions.cpp \
+    matrix4x4.cpp \
+    light.cpp
 
 HEADERS += \
     engine.h \
     camera.h \
-    key.h
+    key.h \
+    point3d.h \
+    primitives.h \
+    primitives.h \
+    gloptions.h \
+    matrix4x4.h \
+    light.h

@@ -14,7 +14,6 @@ using namespace std;
      };
 
 
-//     glutKeyboardFunc(OnKeyPress);
-//     glutKeyboardUpFunc(OnKeyUp);
+
 
 #endif // KEY_H
