@@ -24,13 +24,59 @@ void Engine::Init(int argc, char * argv[],const char* name, int wx, int wy, int 
     // otwarcie okna
     glutCreateWindow(name);
 
+    w=width;
+    h=height;
     // ustawienie wartości jakimi będą wypełniane
     // bufory kolorów w trakcie czyszczenia
     glClearColor(0,0,0,0);
-   // set();
+
 }
 
-void Engine::display(Shape shape)
+void Engine::errorHandling(const char * errorLocation)
+{
+    unsigned int gle = glGetError();
+
+    if (gle != GL_NO_ERROR)
+    {
+        cout << "GL Error discovered from caller " << errorLocation << ": ";
+
+        switch (gle)
+        {
+        case GL_INVALID_ENUM:
+            cout << "Invalid enum." << endl;
+            break;
+
+        case GL_INVALID_VALUE:
+            cout << "Invalid value.\n";
+            break;
+
+        case GL_INVALID_OPERATION:
+            cout << "Invalid Operation.\n";
+            break;
+
+        case GL_STACK_OVERFLOW:
+            cout << "Stack overflow.\n";
+            break;
+
+        case GL_STACK_UNDERFLOW:
+            cout << "Stack underflow.\n";
+            break;
+
+        case GL_OUT_OF_MEMORY:
+            cout << "Out of memory.\n";
+            break;
+        default:
+            cout << "Unknown error! Enum code is: " << gle << endl;
+            break;
+
+        } // End of switch
+
+    } // End of if error detected
+
+} // End of chechGLError function
+
+
+void Engine::display()
 {
 
     // kolor tła - zawartość bufora koloru
@@ -39,8 +85,12 @@ void Engine::display(Shape shape)
         // czyszczenie bufora koloru
         glClear( GL_COLOR_BUFFER_BIT );
 
+
+
+
         // wybór macierzy modelowania
         glMatrixMode( GL_MODELVIEW );
+
 
         // macierz modelowania = macierz jednostkowa
         glLoadIdentity();
@@ -49,68 +99,56 @@ void Engine::display(Shape shape)
         glTranslatef( 0, 0, -( near + far ) / 2 );
 
         // przesunięcie obiektu - ruch myszką
-        glTranslatef( translatex, translatey, 0.0 );
+        glTranslatef( translatex, translatey, translatez );
 
         // skalowanie obiektu - klawisze "+" i "-"
-        glScalef( scale, scale, scale );
+       // glScalef( scale, scale, scale );
 
         // obroty obiektu - klawisze kursora
-        glRotatef( rotatex, 1.0, 0, 0 );
-        glRotatef( rotatey, 0, 1.0, 0 );
+        //glRotatef( rotatex, 1.0, 0, 0 );
+        //glRotatef( rotatey, 0, 1.0, 0 );
 
         // kolor krawędzi obieusing namespace std;ktu
         glColor3f( 0.0, 0.0, 0.0 );
 
+           c.ustawKamere();
+
+
+        auto myTexture = textureFactory.createTexture();
+        textureFactory.LoadTGATexture("/home/ola/Pulpit/tex0.tga");
+
+        float xPlane[] = {1.0f, 0.0f, 0.0f, 0.0f};
+        float yPlane[] = {0.0f, 1.0f, 0.0f, 0.0f};
+        float zPlane[] = {0.0f, 0.0f, 1.0f, 0.0f};
+
+        glTexGeni(GL_S, GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR);
+        glTexGeni(GL_T, GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR);
+        glTexGeni(GL_R, GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR);
+
+        glTexGenfv(GL_S,GL_OBJECT_PLANE,xPlane);
+        glTexGenfv(GL_T,GL_OBJECT_PLANE,yPlane);
+        glTexGenfv(GL_R,GL_OBJECT_PLANE,zPlane);pp
+
+        glMatrixMode(GL_TEXTURE);
+        glLoadIdentity();
+ //       glScale(0.5f,0.5f,0.5f);
+      //  glTranslate(0.5f,0.5f,0.5f);
+
+
+
+
         // rysowanie obiektu
-        switch( shape )
-        {
-            // kula
-        case Shape::WIRE_SPHERE:
-            glutWireSphere( 1.0, 20, 10 );
-            break;
+     //   glutSolidCone( 1.0, 2.0, 10, 10 );
+        glutSolidCube(2.0);
+//        glBegin(GL_TRIANGLES);
+//        glTexCoord2f(0.1f, 0.0f);
+//        glVertex3f(0.0f,0.0f,0.0f);
+//        glTexCoord2f(1.0f, 0.0f);
+//        glVertex3f(2.0f,0.0f,0.0f);
+//        glTexCoord2f(0.1f, 1.0f);
+//        glVertex3f(0.0f,-2.0f,0.0f);
+//        glEnd();
 
-            // stożek
-        case Shape::WIRE_CONE:
-            glutWireCone( 1.0, 2.0, 20, 10 );
-            break;
-
-            // sześcian
-        case Shape::WIRE_CUBE:
-            glutWireCube( 1.0 );
-            break;
-
-            // torus
-        case Shape::WIRE_TORUS:
-            glutWireTorus( 0.2, 1, 10, 20 );
-            break;
-
-            // dwunastościan
-        case Shape::WIRE_DODECAHEDRON:
-            glutWireDodecahedron();
-            break;
-
-            // czajnik
-        case Shape::WIRE_TEAPOT:
-            glutWireTeapot( 1.0 );
-            break;
-
-            // ośmiościan
-        case Shape::WIRE_OCTAHEDRON:
-            glutWireOctahedron();
-            break;
-
-            // czworościan
-        case Shape::WIRE_TETRAHEDRON:
-            glutWireTetrahedron();
-            break;
-
-            // dwudziestościan
-        case Shape::WIRE_ICOSAHEDRON:
-            glutWireIcosahedron();
-            break;
-        case Shape::LAST:
-            exit(-1);
-        }
 
         // skierowanie poleceń do wykonania
         glFlush();
@@ -134,7 +172,7 @@ void Engine::Reshape( int width, int height )
     // parametry bryły obcinania
     if( aspect == Settings::ASPECT_1_1 )
     {
-        // wysokość okna większa od wysokości okna
+        // wysokość okna większa od szerokości okna
         if( width < height && width > 0 )
              glFrustum( left, right, bottom * height / width, top * height / width, near, far );
         else
@@ -148,34 +186,53 @@ void Engine::Reshape( int width, int height )
     {
          glFrustum( left, right, bottom, top, near, far );
     }
+    // generowanie sceny 3d
+    display();
+}
+void Engine::ortho(int width, int height)
+{
+    glOrtho( left * width / height, right * width / height, bottom, top, near, far );
+
+}
+void Engine::perspective(int width, int height)
+{
+   glFrustum( left * width / height, right * width / height, bottom, top, near, far );
+
+}
+void Engine::ReshapeOrtho( int width, int height )
+{
+
+    // obszar renderingu - całe okno
+    glViewport( 0, 0, width, height );
+
+    // wybór macierzy rzutowania
+    glMatrixMode( GL_PROJECTION );
+
+    // macierz rzutowania = macierz jednostkowa
+    glLoadIdentity();
+
+    // parametry bryły obcinania
+    if( aspect == Settings::ASPECT_1_1 )
+    {
+        // wysokość okna większa od szerokości okna
+        if( width < height && width > 0 )
+             glOrtho( left, right, bottom * height / width, top * height / width, near, far );
+        else
+
+        // szerokość okna większa lub równa wysokości okna
+        if( width >= height && height > 0 )
+             glOrtho( left * width / height, right * width / height, bottom, top, near, far );
+
+    }
+    else
+    {
+         glOrtho( left, right, bottom, top, near, far );
+    }
     // generowanie sceny 3D
-    display(currentShape);
-}
-void Engine::skalowanie(int s, int w)
-{
-    // zestaw funkcji ustalających sposób rzutowania,
-    // zakresy współrzędnych x,y widocznych w oknie
-    // oraz zerujących macierze przekształceń
-    glViewport(0,0,s,w);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-
-    if (s<=w) glOrtho(-1000,1000,-1000*(w/s),1000*(w/s),-1000,1000);
-    else glOrtho(-1000*(s/w),1000*(s/w),-1000,1000,-1000,1000);
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+    c.refresh();
+    display();
 }
 
-void Engine::obroty(void)
-{
-    // zwiększenie kąta o 5 stopni po wykryciu
-    // bezczynności systemu
-    if (kat==360) kat=0;
-    kat+=5;
-    // wymuszenie ponownego przerysowania okna
-    glutPostRedisplay();
-}
 
 
 void Engine::handleOption(const Settings currentOption)
@@ -185,26 +242,37 @@ void Engine::handleOption(const Settings currentOption)
     {
         // obszar renderingu - całe okno
       case Settings::FULL_WINDOW:
-         Reshape( glutGet( GLUT_WINDOW_WIDTH ), glutGet( GLUT_WINDOW_HEIGHT ) );
+         glutFullScreen();
+        Reshape( glutGet( GLUT_WINDOW_WIDTH ), glutGet( GLUT_WINDOW_HEIGHT ) );
         break;
 
    // obszar renderingu - aspekt 1:1
       case Settings::ASPECT_1_1:
+        glutReshapeWindow(w,h);
+
         Reshape( glutGet( GLUT_WINDOW_WIDTH ), glutGet( GLUT_WINDOW_HEIGHT ) );
         break;
+    case Settings::PERSPECTIVE:
+     Reshape( glutGet( GLUT_WINDOW_WIDTH ), glutGet( GLUT_WINDOW_HEIGHT ));
+      break;
 
+    case Settings::ORTHO:
+      ReshapeOrtho( glutGet( GLUT_WINDOW_WIDTH ), glutGet( GLUT_WINDOW_HEIGHT ));
+      break;
         // wyjście
        case Settings::EXIT:
         exit( 0 );
     }
 }
 
+
 void Engine::Menu( int value )
 {
     currentShape = static_cast<Shape>(value);
     if (currentShape < Shape::LAST)
     {
-        display(currentShape);
+       glShadeModel( GL_SMOOTH);
+        display();
     }
     else
     {
@@ -213,23 +281,38 @@ void Engine::Menu( int value )
 }
 void Engine::Keyboard( unsigned char key, int x, int y )
 {
-    // klawisz +
-    if( key == '+' )
-         scale += 0.1;
-    else
-
-    // klawisz -
-    if( key == '-' && scale > 0.1 )
-         scale -= 0.1;
+    cout<<"obsluguje klawiature"<<endl;
+   switch (key)
+    {
+    case '+' :
+        scale += 0.1;
+        break;
+    case '-' :
+        if(scale > 0.1 )
+             scale -= 0.1;
+        break;
+    case 'w' :
+        translatey += 1.0;
+        cout<<"naciskam x"<<translatey<<endl;
+        break;
+    case 's' :
+        if(translatey > 1.0)
+             translatey -=1.0;
+        break;
+    case 'd' :
+        translatex += 1.0;
+        break;
+    case 'a' :
+        if(translatex > 1.0)
+             translatex -=1.0;
+        break;
+    }
 
     // odrysowanie okna
     Reshape( glutGet( GLUT_WINDOW_WIDTH ), glutGet( GLUT_WINDOW_HEIGHT ) );
 }
 
-void Engine::glutDisplay()
-{
-    display(currentShape);
-}
+
 
 // obsługa klawiszy funkcyjnych i klawiszy kursora
 
@@ -238,23 +321,57 @@ void Engine::SpecialKeys( int key, int x, int y )
     switch( key )
     {
         // kursor w lewo
-    case GLUT_KEY_LEFT:
-        rotatey -= 1;
-        break;
+//    case GLUT_KEY_LEFT:
+//        rotatey -= 1;
+//        break;
+//        // kursor w górę
+//    case GLUT_KEY_UP:
+//        rotatex -= 1;
+//        break;
+//        // kursor w prawo
+//    case GLUT_KEY_RIGHT:
+//        rotatey += 1;
+//        break;
+//        // kursor w dół
+//    case GLUT_KEY_DOWN:
+//        rotatex += 1;
+//        break;
+    case GLUT_KEY_UP :
+        translatey += 0.1;
 
-        // kursor w górę
-    case GLUT_KEY_UP:
-        rotatex -= 1;
         break;
-
-        // kursor w prawo
-    case GLUT_KEY_RIGHT:
-        rotatey += 1;
+    case  GLUT_KEY_DOWN :
+        translatey -=0.1;
         break;
-
-        // kursor w dół
-    case GLUT_KEY_DOWN:
-        rotatex += 1;
+    case GLUT_KEY_RIGHT :
+        translatex += 0.1;
+        break;
+    case GLUT_KEY_LEFT :
+        translatex -=0.1;
+    case GLUT_KEY_F1 :
+        c.angle -= 0.01f;
+        c.lx = sin(c.angle);
+        c.lz = -cos(c.angle);
+        break;
+    case GLUT_KEY_F2 :
+        c.angle += 0.01f;
+        c.lx = sin(c.angle);
+        c.lz = -cos(c.angle);
+        break;
+    case GLUT_KEY_F3 :
+        c.x += c.lx * 0.1f;
+        c.z += c.lz * 0.1f;
+        break;
+    case GLUT_KEY_F4 :
+        c.x -= c.lx * 0.1f;
+        c.z -= c.lz * 0.1f;
+        break;
+    case GLUT_KEY_F11 :
+        scale += 0.1;
+        break;
+    case GLUT_KEY_F12 :
+        if(scale > 0.1 )
+             scale -= 0.1;
         break;
     }
 
@@ -286,11 +403,17 @@ void Engine::MouseMotion( int x, int y )
 {
     if( button_state == GLUT_DOWN )
     {
-        translatex += 1.1 *( right - left ) / glutGet( GLUT_WINDOW_WIDTH ) *( x - button_x );
-        button_x = x;
-        translatey += 1.1 *( top - bottom ) / glutGet( GLUT_WINDOW_HEIGHT ) *( button_y - y );
-        button_y = y;
+//        translatex += 1.1 *( right - left ) / glutGet( GLUT_WINDOW_WIDTH ) *( x - button_x );
+//        button_x = x;
+//        translatey += 1.1 *( top - bottom ) / glutGet( GLUT_WINDOW_HEIGHT ) *( button_y - y );
+//        button_y = y;
+
+                translatez += 1.1 *( right - left ) / glutGet( GLUT_WINDOW_WIDTH ) *( x - button_x );
+                button_x = x;
+                translatez += 1.1 *( top - bottom ) / glutGet( GLUT_WINDOW_HEIGHT ) *( button_y - y );
+                button_y = y;
         glutPostRedisplay();
+        Reshape( glutGet( GLUT_WINDOW_WIDTH ), glutGet( GLUT_WINDOW_HEIGHT ) );
     }
 }
 void Engine::set(void (* menuHandler)( int menu ))
@@ -301,62 +424,47 @@ void Engine::set(void (* menuHandler)( int menu ))
     right = 10.0;
     bottom = - 10.0;
 
-
     // rozmiary bryły obcinania
-
     near = 50.0;
-   far = 70.0;
+    far = 120.0;
     scale = 1.0;
 
-    // kąty obrotu
+    // kąty obrotu i przesuniecie
+    rotatex = 0.0;
+    rotatey = 0.0;
+    translatex = 0.0;
+    translatey = 0.0;
 
-  rotatex = 0.0;
-  rotatey = 0.0;
-  translatex = 0.0;
-  translatey = 0.0;
+   // wskaźnik naciśnięcia lewego przycisku myszki
+    button_state = GLUT_UP;
 
-  // wskaźnik naciśnięcia lewego przycisku myszki
-
-  button_state = GLUT_UP;
-
-
-//    // utworzenie podmenu - obiekt
-    auto menuObject = glutCreateMenu( menuHandler );
-    glutAddMenuEntry( "Kula", underlying_cast(Shape::WIRE_SPHERE) );
-    #ifdef WIN32
-
-    glutAddMenuEntry( "Stożek", Shape::WIRE_CONE );
-    glutAddMenuEntry( "Sześcian", Shape::WIRE_CUBE );
-    glutAddMenuEntry( "Torus", Shape::WIRE_TORUS );
-    glutAddMenuEntry( "Dwunastościan", Shape::WIRE_DODECAHEDRON );
-    glutAddMenuEntry( "Czajnik", Shape::WIRE_TEAPOT );
-    glutAddMenuEntry( "Ośmiościan", Shape::WIRE_OCTAHEDRON );
-    glutAddMenuEntry( "Czworościan", Shape::WIRE_TETRAHEDRON );
-    glutAddMenuEntry( "Dwudziestościan", Shape::WIRE_ICOSAHEDRON );
-    #else
-
-    glutAddMenuEntry( "Stozek", underlying_cast(Shape::WIRE_CONE) );
-    glutAddMenuEntry( "Szescian", underlying_cast(Shape::WIRE_CUBE) );
-    glutAddMenuEntry( "Torus", underlying_cast(Shape::WIRE_TORUS) );
-    glutAddMenuEntry( "Dwunastoscian", underlying_cast(Shape::WIRE_DODECAHEDRON) );
-    glutAddMenuEntry( "Czajnik", underlying_cast(Shape::WIRE_TEAPOT) );
-    glutAddMenuEntry( "Osmioscian", underlying_cast(Shape::WIRE_OCTAHEDRON) );
-    glutAddMenuEntry( "Czworoscian", underlying_cast(Shape::WIRE_TETRAHEDRON) );
-    glutAddMenuEntry( "Dwudziestoscian", underlying_cast(Shape::WIRE_ICOSAHEDRON) );
-    #endif
+   // utworzenie podmenu
+    //auto menuObjectWire = glutCreateMenu( menuHandler );
+    //glutAddMenuEntry( "Kula", underlying_cast(Shape::WIRE_SPHERE) );
 
     // menu główne
     glutCreateMenu(menuHandler );
-    //glutAddSubMenu( "Aspekt obrazu", MenuAspect );
-    glutAddSubMenu( "Obiekt", menuObject );
-    #ifdef WIN32
-
-    glutAddMenuEntry( "Wyjście", underlying_cast(Settings::EXIT) );
-    #else
-
+   // glutAddSubMenu( "Operacja", menuObjectWire );
     glutAddMenuEntry( "Wyjscie", underlying_cast(Settings::EXIT) );
-    #endif
-
     // określenie przycisku myszki obsługującego menu podręczne
     glutAttachMenu( GLUT_RIGHT_BUTTON );
+}
+
+void Engine::cleanColor()
+{
+    glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void Engine::cleanDepth()
+{
+     glClear(GL_DEPTH_BUFFER_BIT);
+}
+
+void Engine::cleanAccum()
+{
+     glClear(GL_ACCUM_BUFFER_BIT);
+}
+void Engine::cleanStencil()
+{
+     glClear(GL_STENCIL_BUFFER_BIT);
 }
